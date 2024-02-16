@@ -2,7 +2,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 
@@ -98,5 +101,63 @@ class HorseTest {
 
         Assertions.assertEquals(messageExpected, messageActual);
     }
+
+    @Test
+    void getNameTest() {
+        Horse horse = new Horse(name, speed, distance);
+        String actual = horse.getName();
+
+        Assertions.assertEquals(name, actual);
+    }
+
+    @Test
+    void getSpeedTest() {
+        Horse horse = new Horse(name, speed, distance);
+        double actual = horse.getSpeed();
+
+        Assertions.assertEquals(speed, actual);
+    }
+
+    @Test
+    void getDistanceTest_getThirdParameterFromConstructor() {
+        Horse horse = new Horse(name, speed, distance);
+        double actual = horse.getDistance();
+
+        Assertions.assertEquals(distance, actual);
+    }
+
+    @Test
+    void getDistanceTest_getZeroIfNewInstanceHaveTwoParameter() {
+        Horse horse = new Horse(name, speed);
+        double expected = 0;
+        double actual = horse.getDistance();
+
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @Test
+    void moveTest_VerifyGetRandomDouble() {
+        try (MockedStatic<Horse> mockedStatic = Mockito.mockStatic(Horse.class)) {
+            Horse horse = new Horse(name, speed, distance);
+            horse.move();
+
+            mockedStatic.verify(() -> Horse.getRandomDouble(0.2, 0.9));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0.2, 0.9, 0.55"})
+    void moveTest(double min, double max, double randomDouble) {
+        try (MockedStatic<Horse> mockedStatic = Mockito.mockStatic(Horse.class)) {
+            mockedStatic.when(() -> Horse.getRandomDouble(min, max)).thenReturn(randomDouble);
+            Horse horse = new Horse(name, speed, distance);
+            double expectedDistance = distance + speed * randomDouble;
+            horse.move();
+            double actualDistance = horse.getDistance();
+
+            Assertions.assertEquals(expectedDistance, actualDistance);
+        }
+    }
+
 
 }
